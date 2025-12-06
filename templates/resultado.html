@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Auditoria SEO | SEO Audit Report</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        h1, h2, h3 { color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .status-section { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 10px 0; border-bottom: 1px dashed #ccc; }
+        .status-item { font-size: 1.1em; font-weight: bold; }
+        
+        /* Estilos de Status */
+        .status-OK { background-color: #e6ffe6; color: #1e7e34; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .status-AVISO { background-color: #fff8e1; color: #856404; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .status-ERRO { background-color: #fcece9; color: #dc3545; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .status-N/A { background-color: #f0f0f0; color: #555; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+
+        /* Estilos da Lista de Verificações */
+        .verification-list { list-style: none; padding: 0; }
+        .verification-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .verification-item p { margin: 5px 0 0 20px; font-size: 0.9em; color: #555; }
+        
+        /* Estilos Pagespeed (Novos) */
+        .page-speed-section { border: 1px solid #0056b3; background-color: #f0f8ff; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        .page-speed-section h4 { color: #0056b3; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
+        .page-speed-section ul, .page-speed-section ol { list-style-type: none; padding-left: 20px; }
+        .page-speed-section li { margin-bottom: 5px; }
+        
+        /* Badges de Score e Cores - Para Performance */
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; color: white; }
+        
+        /* Cores do Score: 0-49 (Red/Vermelho), 50-89 (Orange/Laranja), 90-100 (Green/Verde) */
+        {% for i in range(1, 101) %}
+        .score-{{ i }} { background-color: 
+            {% if i >= 90 %} #4CAF50; /* Green */ 
+            {% elif i >= 50 %} #FF9800; /* Orange */
+            {% else %} #f44336; /* Red */
+            {% endif %} 
+        }
+        {% endfor %}
+        .impact { font-style: italic; color: #333; font-weight: 500; }
+        .metric-value { font-weight: bold; color: #000; }
+
+        .recommendation { margin-top: 15px; padding: 10px; border-left: 5px solid #ffc107; background-color: #fffde7; }
+        .recommendation strong { color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Relatório de Auditoria SEO Completo</h1>
+            <h2>Full SEO Audit Report</h2>
+        </div>
+
+        <div class="status-section">
+            <div class="status-item">
+                URL Analisada: / Analyzed URL:
+                <strong>{{ resultados.url_analisada }}</strong>
+            </div>
+            <div class="status-item">
+                Palavra-Chave Principal: / Primary Keyword:
+                <strong>{{ resultados.keyword_analisada if resultados.keyword_analisada else 'N/A' }}</strong>
+            </div>
+        </div>
+
+        {% if resultados.status_geral == 'erro_scraping' %}
+            <h2 class="status-ERRO">Erro na Conexão / Connection Error</h2>
+            <p>Ocorreu um erro ao tentar acessar a URL. Verifique se a URL está correta e acessível.</p>
+            <p>An error occurred while trying to access the URL. Check if the URL is correct and accessible.</p>
+            {% for erro in resultados.erros_e_avisos %}
+                <p>Detalhe / Detail: {{ erro }}</p>
+            {% endfor %}
+        {% else %}
+        
+        {% set psd_res = resultados.verificacoes.pagespeed_api %}
+        <div class="page-speed-section">
+            <h3>🚀 Análise de Performance (PageSpeed Insights - Móvel)</h3>
+            <h3>🚀 Performance Analysis (PageSpeed Insights - Mobile)</h3>
+
+            {% if psd_res.status == 'OK' and psd_res.pagespeed_data and psd_res.pagespeed_data.metrics %}
+                {% set psd = psd_res.pagespeed_data %}
+                <p>Status: <span class="status-OK">Sucesso / Success</span></p>
+                
+                <h4>Métricas Principais / Core Metrics</h4>
+                <ul>
+                    <li>
+                        <strong>Score Geral / Overall Score:</strong> 
+                        <span class="metric-value badge score-{{ psd.metrics.score|default(0) }}">{{ psd.metrics.score }}</span>
+                        (Baseado em dados de laboratório do Lighthouse / Based on Lighthouse Lab Data)
+                    </li>
+                    
+                    <li>
+                        <strong>LCP (Pintura Principal):</strong> 
+                        {% set lcp_s = (psd.metrics.LCP / 1000)|round(2) if psd.metrics.LCP is not none else 'N/A' %}
+                        <span class="metric-value">{{ lcp_s }}s</span> 
+                        ({{ 'Ideal' if psd.metrics.LCP is not none and (psd.metrics.LCP / 1000) <= 2.5 else 'Precisa de Atenção / Needs Attention' }})
+                    </li>
+                    
+                    <li>
+                        <strong>CLS (Estabilidade Visual / Visual Stability):</strong> 
+                        {% set cls_val = psd.metrics.CLS|default('N/A')|round(4) %}
+                        <span class="metric-value">{{ cls_val }}</span> 
+                        ({{ 'Ideal' if psd.metrics.CLS is not none and psd.metrics.CLS <= 0.1 else 'Instável / Unstable' }})
+                    </li>
+                    
+                    <li>
+                        <strong>TBT (Tempo Total de Bloqueio):</strong> 
+                        <span class="metric-value">{{ psd.metrics.TBT|default('N/A') }} ms</span>
+                        ({{ 'Crítico / Critical' if psd.metrics.TBT is not none and psd.metrics.TBT > 300 else 'Bom / Good' }})
+                    </li>
+                </ul>
+
+                {% if psd.top_opportunities %}
+                    <h4>Principais Oportunidades de Otimização / Top Optimization Opportunities</h4>
+                    <ol>
+                        {% for opportunity in psd.top_opportunities %}
+                            <li>
+                                <strong>{{ opportunity.title }}</strong> 
+                                <span class="impact">(Impacto Estimado / Est. Impact: {{ opportunity.impact }})</span>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                {% else %}
+                    <p>✨ Nenhuma oportunidade crítica de performance detectada. / No critical performance opportunities detected.</p>
+                {% endif %}
+                
+            {% else %}
+                <p>Status: <span class="{{ 'status-AVISO' if psd_res.status != 'ERRO' else 'status-ERRO' }}">{{ psd_res.status }}</span></p>
+                <p>{{ psd_res.sugestao }}</p>
+            {% endif %}
+        </div>
+        
+        <h2>Verificações da Página / On-Page & Technical Verifications</h2>
+
+        <ul class="verification-list">
+            {% for key, item in resultados.verificacoes.items() %}
+                {% if key != 'pagespeed_api' %} <li class="verification-item">
+                    <strong>
+                        {% set pt_title = {
+                            'titulo': 'Título da Página (Title Tag)',
+                            'meta_description': 'Meta Description',
+                            'estrutura_h': 'Estrutura de Cabeçalhos (H1, H2, H3)',
+                            'alt_text_imagens': 'Texto ALT das Imagens',
+                            'estrutura_url': 'Estrutura da URL (URL Slug)',
+                            'uso_botoes_link': 'Uso Correto de Links vs. Botões',
+                            'densidade_keywords': 'Densidade da Palavra-Chave',
+                            'over_optimization': 'Contagem de Palavras (Conteúdo Fino)',
+                            'links_quebrados': 'Links Quebrados (4xx/5xx)',
+                            'https': 'Protocolo HTTPS',
+                            'redirecionamento': 'Redirecionamento (Cadeia de URL)',
+                            'sitemap': 'Sitemap.xml',
+                            'canonical_tag': 'Tag Canonical',
+                            'indexacao_rastreabilidade': 'Indexação (Meta Robots)',
+                            'mobile_friendly_viewport': 'Mobile Friendly (Viewport)',
+                            'tags_ads_pixels': 'Tags de Rastreamento (Ads/Pixels)',
+                            'render_blocking': 'Recursos de Bloqueio de Renderização',
+                            'schema_markup': 'Schema Markup (Dados Estruturados)',
+                            'conteudo_misto': 'Conteúdo Misto (Mixed Content)',
+                            'acessibilidade_basica': 'Acessibilidade Básica (Legibilidade)'
+                        } %}
+                        
+                        {{ pt_title[key]|default(key) }}: / 
+                        
+                        {% set en_title = {
+                            'titulo': 'Title Tag',
+                            'meta_description': 'Meta Description',
+                            'estrutura_h': 'Heading Structure (H1, H2, H3)',
+                            'alt_text_imagens': 'Image ALT Text',
+                            'estrutura_url': 'URL Structure (URL Slug)',
+                            'uso_botoes_link': 'Correct Link vs. Button Usage',
+                            'densidade_keywords': 'Keyword Density',
+                            'over_optimization': 'Word Count (Thin Content)',
+                            'links_quebrados': 'Broken Links (4xx/5xx)',
+                            'https': 'HTTPS Protocol',
+                            'redirecionamento': 'Redirection (URL Chain)',
+                            'sitemap': 'Sitemap.xml',
+                            'canonical_tag': 'Canonical Tag',
+                            'indexacao_rastreabilidade': 'Indexing (Meta Robots)',
+                            'mobile_friendly_viewport': 'Mobile Friendly (Viewport)',
+                            'tags_ads_pixels': 'Tracking Tags (Ads/Pixels)',
+                            'render_blocking': 'Render Blocking Resources',
+                            'schema_markup': 'Schema Markup (Structured Data)',
+                            'conteudo_misto': 'Mixed Content',
+                            'acessibilidade_basica': 'Basic Accessibility (Readability)'
+                        } %}
+                        {{ en_title[key]|default(key) }}:
+                    </strong>
+                    <span class="status-{{ item.status }}">{{ item.status }}</span>
+                    
+                    <div class="recommendation">
+                        <strong>Recomendação / Recommendation:</strong> 
+                        {{ item.sugestao }}
+                        
+                        {% if item.valor is defined and item.valor is not none and item.valor != "NÃO ENCONTRADA" %}
+                            <br>
+                            *Valor Encontrado / Value Found: <em>{{ item.valor }}</em>
+                        {% endif %}
+                        
+                        {% if item.comprimento is defined %}
+                            <br>
+                            *Comprimento / Length: {{ item.comprimento }}
+                        {% endif %}
+
+                        {% if item.contagem is defined %}
+                            <br>
+                            *Contagem / Count: {{ item.contagem }}
+                        {% endif %}
+                    </div>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+
+        {% endif %}
+        
+        <p style="text-align: center; margin-top: 30px;">
+            <a href="/" style="color: #0056b3; text-decoration: none; border: 1px solid #0056b3; padding: 10px 15px; border-radius: 5px;">
+                Fazer Nova Auditoria / Perform New Audit
+            </a>
+        </p>
+
+    </div>
+</body>
+</html>

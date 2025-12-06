@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditor SEO | SEO Auditor</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        h1 {
+            color: #0056b3;
+            margin-bottom: 5px;
+        }
+        h2 {
+            color: #555;
+            font-size: 1.2em;
+            margin-top: 5px;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            text-align: left;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #004085;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        /* Estilo do Spinner de Carregamento */
+        .loading-message {
+            display: none; /* Escondido por padrão */
+            padding: 30px;
+            text-align: center;
+            color: #0056b3;
+            font-size: 1.1em;
+        }
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #0056b3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        {% if erro %}
+            <div class="error">{{ erro }}</div>
+        {% endif %}
+
+        <div id="audit-form-content">
+            <h1>Auditor SEO</h1>
+            <h2>Inicie sua Análise de Website / Start your Website Analysis</h2>
+            
+            <form id="audit-form" action="/auditoria" method="post">
+                
+                <label for="url">
+                    URL do Website (Ex: https://meusite.com.br) / Website URL (Ex: https://mysite.com)
+                </label>
+                <input type="text" id="url" name="url" placeholder="Digite a URL / Enter the URL" required>
+
+                <label for="keyword">
+                    Palavra-Chave Principal (Opcional) / Primary Keyword (Optional)
+                </label>
+                <input type="text" id="keyword" name="keyword" placeholder="Ex: marketing digital">
+
+                <button type="submit">Iniciar Auditoria / Start Audit</button>
+            </form>
+        </div>
+
+        <div id="loading-spinner" class="loading-message">
+            <div class="spinner"></div>
+            <h3>Analisando a Página e a Performance...</h3>
+            <h4>Isso pode levar de 15 a 30 segundos devido à API do PageSpeed Insights. Por favor, aguarde.</h4>
+            <p>Analyzing Page and Performance... Please wait.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('audit-form').addEventListener('submit', function() {
+            // Oculta o formulário
+            document.getElementById('audit-form-content').style.display = 'none';
+            // Exibe o spinner de carregamento
+            document.getElementById('loading-spinner').style.display = 'block';
+            
+            // Oculta qualquer erro anterior para limpar a tela
+            const errorDiv = document.querySelector('.error');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
